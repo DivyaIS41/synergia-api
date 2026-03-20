@@ -124,7 +124,7 @@ mongodb://localhost:27017/synergia-bookings
 
 **Example Connection String:**
 ```
-mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/synergia-bookings?retryWrites=true&w=majority
+mongodb+srv://<db-user>:<db-password>@<cluster-url>/synergia-bookings?retryWrites=true&w=majority
 ```
 
 ---
@@ -186,7 +186,7 @@ NODE_ENV=development
 
 **For MongoDB Atlas:**
 ```env
-MONGODB_URI=mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/synergia-bookings?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://<db-user>:<db-password>@<cluster-url>/synergia-bookings?retryWrites=true&w=majority
 ```
 
 ### Step 4: Verify Installation
