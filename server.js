@@ -13,15 +13,15 @@ app.use(bodyParser.json());
 // MongoDB Connection
 // ---------------------------
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/synergia-bookings')
-  .then(() => console.log('✅ MongoDB connected successfully'))
+  .then(() => console.log('MongoDB connected successfully'))
   .catch(err => {
-    console.error('❌ MongoDB connection error:', err.message);
+    console.error('MongoDB connection error:', err.message);
     process.exit(1);
   });
 
 // Root route - for testing if API is running
 app.get("/", (req, res) => {
-  res.send("Welcome to the Synergia Event Booking API 🚀");
+  res.send("Welcome to the Synergia Event Booking API");
 });
 
 // ---------------------------
@@ -44,8 +44,9 @@ app.get("/events", (req, res) => {
 // 2. POST /events/add - Create a new event
 app.post("/events/add", (req, res) => {
   const { name, date, location, capacity } = req.body;
-  if (!name || !date || !location || !capacity)
+  if (!name || !date || !location || !capacity) {
     return res.status(400).json({ message: "Please provide all event details" });
+  }
 
   const newEvent = {
     id: events.length + 1,
@@ -60,15 +61,19 @@ app.post("/events/add", (req, res) => {
 
 // 3. GET /event/:id - Get event by ID
 app.get("/event/:id", (req, res) => {
-  const event = events.find(e => e.id === parseInt(req.params.id));
-  if (!event) return res.status(404).json({ message: "Event not found" });
+  const event = events.find(e => e.id === parseInt(req.params.id, 10));
+  if (!event) {
+    return res.status(404).json({ message: "Event not found" });
+  }
   res.json(event);
 });
 
 // 4. PUT /event/:id - Update event details
 app.put("/event/:id", (req, res) => {
-  const event = events.find(e => e.id === parseInt(req.params.id));
-  if (!event) return res.status(404).json({ message: "Event not found" });
+  const event = events.find(e => e.id === parseInt(req.params.id, 10));
+  if (!event) {
+    return res.status(404).json({ message: "Event not found" });
+  }
 
   const { name, date, location, capacity } = req.body;
   if (name) event.name = name;
@@ -79,11 +84,13 @@ app.put("/event/:id", (req, res) => {
   res.json({ message: "Event updated successfully", event });
 });
 
-// 5. DELETE /event/:id - Cancel a event
+// 5. DELETE /event/:id - Cancel an event
 app.delete("/event/:id", (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id, 10);
   const index = events.findIndex(e => e.id === id);
-  if (index === -1) return res.status(404).json({ message: "Event not found" });
+  if (index === -1) {
+    return res.status(404).json({ message: "Event not found" });
+  }
 
   events.splice(index, 1);
   res.json({ message: "Event deleted successfully" });
@@ -388,16 +395,16 @@ app.get("/api/bookings/filter/ticketType", async (req, res) => {
 // START SERVER
 // ---------------------------
 const server = app.listen(PORT, () => {
-  console.log(`✅ Synergia API running at http://localhost:${PORT}`);
-  console.log(`📦 MongoDB: Connected to ${process.env.MONGODB_URI || 'mongodb://localhost:27017/synergia-bookings'}`);
+  console.log(`Synergia API running at http://localhost:${PORT}`);
+  console.log('MongoDB: Connected successfully');
 });
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('\n⏹️  Shutting down server...');
+  console.log('\nShutting down server...');
   await mongoose.connection.close();
   server.close(() => {
-    console.log('✅ Server closed');
+    console.log('Server closed');
     process.exit(0);
   });
 });
