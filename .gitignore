@@ -27,3 +27,7 @@ yarn-error.log*
 
 # Temporary files
 tempCodeRunnerFile.js
+
+# Database files
+*.db
+*.sqlite

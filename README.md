@@ -1,33 +1,50 @@
-# Synergia Event Booking API
+# Synergia Event Booking API - MongoDB Edition
 
-A REST API built with Node.js and Express.js for managing event bookings and registrations for the Synergia event platform.
+A comprehensive REST API built with Node.js, Express.js, and MongoDB for managing event bookings and registrations for the Synergia event platform. This version includes full CRUD operations with MongoDB integration, search, and filter capabilities.
 
 ## 📋 Table of Contents
 
 - [Project Overview](#project-overview)
 - [Prerequisites](#prerequisites)
+- [MongoDB Setup](#mongodb-setup)
 - [Installation](#installation)
 - [Running the Project](#running-the-project)
 - [Project Structure](#project-structure)
 - [API Endpoints](#api-endpoints)
 - [Usage Examples](#usage-examples)
 - [Testing](#testing)
+- [Assignment 2 Requirements](#assignment-2-requirements)
 
 ---
 
 ## 📖 Project Overview
 
-Synergia API is a comprehensive REST API that provides functionality for:
+Synergia API (MongoDB Edition) is an enhanced REST API that provides comprehensive functionality for:
 - **Event Management**: Create, read, update, and delete events
-- **Booking Management**: Create, read, update, and delete event bookings
-- **Participant Tracking**: Manage participant information for events
+- **Booking Management**: Full CRUD operations with MongoDB persistence
+- **Advanced Search**: Search bookings by email
+- **Smart Filtering**: Filter bookings by event, ticket type, and more
+- **Data Persistence**: All bookings stored in MongoDB database
+- **Input Validation**: Comprehensive validation for all fields
 
 ### Key Features
-- RESTful API design
-- In-memory data storage (can be extended with MongoDB)
-- Request validation
-- Proper HTTP status codes
-- JSON response format
+- ✅ RESTful API design
+- ✅ MongoDB database integration with Mongoose ORM
+- ✅ Email validation and search capabilities
+- ✅ Advanced filtering and query operations
+- ✅ Proper HTTP status codes
+- ✅ JSON response format
+- ✅ Environment-based configuration
+- ✅ Graceful error handling
+
+### What's New in Assignment 2
+- MongoDB connection using Mongoose
+- Booking model with schema validation
+- Email and event search functionality
+- Ticket type filtering
+- Comprehensive error handling
+- UUID-based booking identifiers
+- Enhanced API response structure
 
 ---
 
@@ -43,8 +60,72 @@ Before running this project, ensure you have the following installed on your sys
    - Usually comes with Node.js
    - Verify installation: `npm --version`
 
-3. **Git** (optional, for version control)
+3. **MongoDB** (Local or Cloud)
+   - Local: Download from https://www.mongodb.com/try/download/community
+   - Cloud: MongoDB Atlas https://www.mongodb.com/cloud/atlas (recommended)
+
+4. **Git** (optional)
    - Download from: https://git-scm.com/
+
+---
+
+## 🗄️ MongoDB Setup
+
+### Option 1: Local MongoDB Installation
+
+#### Windows
+1. Download MongoDB Community from: https://www.mongodb.com/try/download/community
+2. Run the installer and follow the setup wizard
+3. MongoDB will be installed as a service
+4. Start MongoDB:
+   ```bash
+   mongod
+   ```
+   Or if installed as service, it will start automatically
+5. Verify connection:
+   ```bash
+   mongo
+   ```
+
+#### Mac
+```bash
+# Using Homebrew
+brew tap mongodb/brew
+brew install mongodb-community
+brew services start mongodb-community
+```
+
+#### Linux (Ubuntu)
+```bash
+# Install MongoDB
+sudo apt-get update
+sudo apt-get install -y mongodb
+
+# Start MongoDB
+sudo systemctl start mongodb
+sudo systemctl enable mongodb
+```
+
+**Connection String for Local MongoDB:**
+```
+mongodb://localhost:27017/synergia-bookings
+```
+
+### Option 2: MongoDB Atlas (Cloud - Recommended)
+
+1. Visit: https://www.mongodb.com/cloud/atlas
+2. Create a free account
+3. Create a new cluster (select Free tier)
+4. Wait for cluster to deploy (5-10 minutes)
+5. Click "Connect" and select "Connect your application"
+6. Copy the connection string
+7. Replace `<password>` with your database password
+8. Update `.env` file with your connection string
+
+**Example Connection String:**
+```
+mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/synergia-bookings?retryWrites=true&w=majority
+```
 
 ---
 
@@ -71,13 +152,44 @@ Navigate to the project directory and install all required npm packages:
 npm install
 ```
 
-**Expected Output:**
-```
-up to date, audited 117 packages in 2s
-...
+**Expected Packages:**
+- express: Web framework
+- body-parser: Request parsing middleware
+- mongoose: MongoDB ORM
+- dotenv: Environment variable management
+- nodemon: Development auto-reload tool
+- mongodb: MongoDB driver
+
+### Step 3: Configure Environment Variables
+
+Create or update the `.env` file in the project root:
+
+```bash
+# Copy from example
+cp .env.example .env
+
+# Edit .env with your settings
 ```
 
-### Step 3: Verify Installation
+**Edit `.env` with your MongoDB connection:**
+
+```env
+# MongoDB Connection URL
+MONGODB_URI=mongodb://localhost:27017/synergia-bookings
+
+# Server Port
+PORT=3000
+
+# Environment
+NODE_ENV=development
+```
+
+**For MongoDB Atlas:**
+```env
+MONGODB_URI=mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/synergia-bookings?retryWrites=true&w=majority
+```
+
+### Step 4: Verify Installation
 
 Ensure all packages are installed correctly:
 
@@ -89,7 +201,23 @@ npm list
 
 ## 🚀 Running the Project
 
-### Start the Server
+### Prerequisites
+- MongoDB server must be running before starting the API
+
+### Start MongoDB (if local)
+
+**Windows:**
+```bash
+mongod
+```
+
+**Mac/Linux:**
+```bash
+brew services start mongodb-community  # Mac
+sudo systemctl start mongodb           # Linux
+```
+
+### Start the API Server
 
 Run the following command to start the API server:
 
@@ -102,13 +230,12 @@ npm start
 > nodemon server.js
 
 ✅ Synergia API running at http://localhost:3000
+📦 MongoDB: Connected to mongodb://localhost:27017/synergia-bookings
 ```
 
-The server will automatically restart if you make any changes to the code (thanks to nodemon).
+### Accessing the API
 
-### Server Status
-
-- **URL**: http://localhost:3000
+- **Base URL**: http://localhost:3000
 - **Port**: 3000
 - **Status**: Running ✅
 
@@ -122,18 +249,47 @@ Press `Ctrl + C` in the terminal to stop the server.
 
 ```
 synergia-api/
-├── server.js                 # Main application file with API routes
-├── package.json             # Project metadata and dependencies
-├── package-lock.json        # Dependency lock file
-├── README.md               # This file
-├── test-api.js             # Automated test script
-└── screenshots/            # Project screenshots
+├── models/
+│   └── Booking.js                # Booking schema and model
+├── .env                          # Environment variables (NOT in GitHub)
+├── .env.example                  # Environment template (in GitHub)
+├── .gitignore                    # Git ignore rules
+├── server.js                     # Main application with all routes
+├── package.json                  # Project metadata and dependencies
+├── package-lock.json             # Dependency lock file
+├── README.md                     # This file
+├── test-mongodb-api.js           # MongoDB API test script
+└── screenshots/                  # Project screenshots
 ```
 
 ### Key Files
 
-- **server.js**: Contains all Express routes and event/booking management logic
-- **package.json**: Defines project dependencies (express, body-parser, mongodb, ws, nodemon)
+- **server.js**: Main Express application with all API routes
+- **models/Booking.js**: Mongoose schema for booking with validation
+- **.env**: Local environment variables (never committed to GitHub)
+- **.env.example**: Template showing required environment variables
+
+---
+
+## 📊 Booking Model Schema
+
+```javascript
+{
+  _id: ObjectId,                    // Auto-generated MongoDB ID
+  name: String,                     // Participant name (required, min 2 chars)
+  email: String,                    // Email address (required, validated)
+  event: String,                    // Event name (required)
+  ticketType: String,               // Standard, Premium, VIP, or Student
+  createdAt: Date                   // Timestamp (auto)
+}
+```
+
+**Validation Rules:**
+- `name`: Required, minimum 2 characters
+- `email`: Required, must be valid email format
+- `event`: Required
+- `ticketType`: Enum (Standard, Premium, VIP, Student) - Default: Standard
+- `createdAt`: Automatically set to current date
 
 ---
 
@@ -146,231 +302,180 @@ http://localhost:3000
 
 ### Root Endpoint
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Welcome message to verify API is running |
+| No | Method | Endpoint | Description |
+|---|--------|----------|-------------|
+| - | GET | `/` | Welcome message |
 
 ---
 
-### Event Management Routes
+### Booking Management Routes (MongoDB)
 
-#### Get All Events
-```http
-GET /events
-```
-**Response (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "name": "Synergia Tech Talk",
-    "date": "2025-11-10",
-    "location": "Auditorium",
-    "capacity": 100
-  },
-  {
-    "id": 2,
-    "name": "AI Workshop",
-    "date": "2025-11-12",
-    "location": "Lab 1",
-    "capacity": 50
-  }
-]
-```
-
-#### Get Single Event
-```http
-GET /event/:id
-```
-**Example:** `GET /event/1`
-
-**Response (200 OK):**
-```json
-{
-  "id": 1,
-  "name": "Synergia Tech Talk",
-  "date": "2025-11-10",
-  "location": "Auditorium",
-  "capacity": 100
-}
-```
-
-#### Create New Event
-```http
-POST /events/add
-```
-**Request Body:**
-```json
-{
-  "name": "Hackathon 2025",
-  "date": "2025-11-15",
-  "location": "Lab 2",
-  "capacity": 200
-}
-```
-
-**Response (201 Created):**
-```json
-{
-  "message": "Event created successfully",
-  "event": {
-    "id": 3,
-    "name": "Hackathon 2025",
-    "date": "2025-11-15",
-    "location": "Lab 2",
-    "capacity": 200
-  }
-}
-```
-
-#### Update Event
-```http
-PUT /event/:id
-```
-**Example:** `PUT /event/1`
-
-**Request Body (all fields optional):**
-```json
-{
-  "name": "Updated Event Name",
-  "date": "2025-11-20",
-  "location": "New Location",
-  "capacity": 150
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "message": "Event updated successfully",
-  "event": {
-    "id": 1,
-    "name": "Updated Event Name",
-    "date": "2025-11-20",
-    "location": "New Location",
-    "capacity": 150
-  }
-}
-```
-
-#### Delete Event
-```http
-DELETE /event/:id
-```
-**Example:** `DELETE /event/1`
-
-**Response (200 OK):**
-```json
-{
-  "message": "Event deleted successfully"
-}
-```
-
----
-
-### Booking Management Routes
-
-#### Get All Bookings
+#### 1. Get All Bookings
 ```http
 GET /api/bookings
 ```
-**Response (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "eventId": 1,
-    "name": "Chetan",
-    "email": "chetan@example.com"
-  },
-  {
-    "id": 2,
-    "eventId": 2,
-    "name": "Riya",
-    "email": "riya@example.com"
-  }
-]
-```
-
-#### Get Single Booking
-```http
-GET /api/bookings/:id
-```
-**Example:** `GET /api/bookings/1`
 
 **Response (200 OK):**
 ```json
 {
-  "id": 1,
-  "eventId": 1,
-  "name": "Chetan",
-  "email": "chetan@example.com"
+  "success": true,
+  "count": 2,
+  "data": [
+    {
+      "_id": "507f1f77bcf86cd799439011",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "event": "Synergia Tech Talk",
+      "ticketType": "Premium",
+      "createdAt": "2025-11-03T10:30:00.000Z"
+    }
+  ]
 }
 ```
 
-#### Create New Booking
+---
+
+#### 2. Create New Booking
 ```http
 POST /api/bookings
 ```
+
 **Request Body:**
 ```json
 {
-  "eventId": 1,
-  "name": "Alice",
-  "email": "alice@example.com"
+  "name": "John Doe",
+  "email": "john@example.com",
+  "event": "Synergia Tech Talk",
+  "ticketType": "Premium"
 }
 ```
 
 **Response (201 Created):**
 ```json
 {
-  "message": "Booking successful",
-  "booking": {
-    "id": 3,
-    "eventId": 1,
-    "name": "Alice",
-    "email": "alice@example.com"
+  "success": true,
+  "message": "Booking created successfully",
+  "data": {
+    "_id": "507f1f77bcf86cd799439011",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "event": "Synergia Tech Talk",
+    "ticketType": "Premium",
+    "createdAt": "2025-11-03T10:30:00.000Z"
   }
 }
 ```
 
-#### Update Booking
+---
+
+#### 3. Get Booking by ID
+```http
+GET /api/bookings/:id
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "507f1f77bcf86cd799439011",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "event": "Synergia Tech Talk",
+    "ticketType": "Premium",
+    "createdAt": "2025-11-03T10:30:00.000Z"
+  }
+}
+```
+
+---
+
+#### 4. Update Booking
 ```http
 PUT /api/bookings/:id
 ```
-**Example:** `PUT /api/bookings/1`
 
 **Request Body (all fields optional):**
 ```json
 {
-  "name": "Alice Updated",
-  "email": "alice.updated@example.com"
+  "name": "John Updated",
+  "ticketType": "VIP"
 }
 ```
 
 **Response (200 OK):**
 ```json
 {
+  "success": true,
   "message": "Booking updated successfully",
-  "booking": {
-    "id": 1,
-    "eventId": 1,
-    "name": "Alice Updated",
-    "email": "alice.updated@example.com"
-  }
+  "data": {...}
 }
 ```
 
-#### Cancel Booking
+---
+
+#### 5. Delete Booking
 ```http
 DELETE /api/bookings/:id
 ```
-**Example:** `DELETE /api/bookings/1`
 
 **Response (200 OK):**
 ```json
 {
-  "message": "Booking cancelled successfully"
+  "success": true,
+  "message": "Booking cancelled successfully",
+  "data": {...}
+}
+```
+
+---
+
+#### 6. Search Bookings by Email
+```http
+GET /api/bookings/search/email?email=john@example.com
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "count": 1,
+  "query": { "email": "john@example.com" },
+  "data": [...]
+}
+```
+
+---
+
+#### 7. Filter Bookings by Event
+```http
+GET /api/bookings/filter/event?event=Synergia
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "count": 2,
+  "query": { "event": "Synergia" },
+  "data": [...]
+}
+```
+
+---
+
+#### 8. Filter Bookings by Ticket Type (Bonus)
+```http
+GET /api/bookings/filter/ticketType?ticketType=VIP
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "count": 2,
+  "query": { "ticketType": "VIP" },
+  "data": [...]
 }
 ```
 
@@ -381,204 +486,158 @@ DELETE /api/bookings/:id
 ### Using cURL
 
 ```bash
-# Get all events
-curl http://localhost:3000/events
+# Get all bookings
+curl http://localhost:3000/api/bookings
 
-# Create a new event
-curl -X POST http://localhost:3000/events/add \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "WebDev Workshop",
-    "date": "2025-12-01",
-    "location": "Room 101",
-    "capacity": 75
-  }'
-
-# Create a booking
+# Create a new booking
 curl -X POST http://localhost:3000/api/bookings \
   -H "Content-Type: application/json" \
   -d '{
-    "eventId": 1,
     "name": "John Doe",
-    "email": "john@example.com"
+    "email": "john@example.com",
+    "event": "Synergia Tech Talk",
+    "ticketType": "Premium"
   }'
-```
 
-### Using Postman
+# Search by email
+curl http://localhost:3000/api/bookings/search/email?email=john@example.com
 
-1. Import the API endpoints into Postman
-2. Set the base URL to `http://localhost:3000`
-3. Test each endpoint following the documentation above
+# Filter by event
+curl http://localhost:3000/api/bookings/filter/event?event=Synergia
 
-### Using JavaScript (Node.js)
+# Get specific booking by ID
+curl http://localhost:3000/api/bookings/507f1f77bcf86cd799439011
 
-```javascript
-const fetch = require('node-fetch');
+# Update booking
+curl -X PUT http://localhost:3000/api/bookings/507f1f77bcf86cd799439011 \
+  -H "Content-Type: application/json" \
+  -d '{"ticketType": "VIP"}'
 
-// Get all events
-fetch('http://localhost:3000/events')
-  .then(res => res.json())
-  .then(data => console.log(data));
-
-// Create a new event
-fetch('http://localhost:3000/events/add', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    name: 'New Event',
-    date: '2025-12-01',
-    location: 'Hall A',
-    capacity: 100
-  })
-})
-  .then(res => res.json())
-  .then(data => console.log(data));
+# Delete booking
+curl -X DELETE http://localhost:3000/api/bookings/507f1f77bcf86cd799439011
 ```
 
 ---
 
 ## 🧪 Testing
 
-### Automated Testing
-
-Run the included test script to verify all API endpoints:
+### Start MongoDB and API
 
 ```bash
-node test-api.js
+# Terminal 1: Start MongoDB
+mongod
+
+# Terminal 2: Start API server
+npm start
+
+# Terminal 3: Run tests
+node test-mongodb-api.js
+```
+
+### Automated Testing
+
+```bash
+node test-mongodb-api.js
 ```
 
 **Expected Output:**
 ```
-🧪 Running API Tests...
+🧪 Running MongoDB Booking API Tests...
 
 1️⃣  Testing GET /
    Status: 200
-   Response: Welcome to the Synergia Event Booking API 🚀
 
-2️⃣  Testing GET /events
+2️⃣  Testing GET /api/bookings (Get all bookings)
    Status: 200
-   Events: [...]
+
+3️⃣  Testing POST /api/bookings (Create booking)
+   Status: 201
 
 ... (more tests)
 
 ✅ All tests completed successfully!
 ```
 
-### Manual Testing
+---
 
-Use tools like:
-- **cURL** (command line)
-- **Postman** (GUI tool)
-- **Insomnia** (API client)
-- **Thunder Client** (VS Code extension)
+## ✅ Assignment 2 Requirements
+
+### Completed
+
+| Requirement | Status |
+|-------------|--------|
+| Connect Node.js & Express to MongoDB | ✅ |
+| Booking model with schema | ✅ |
+| MongoDB CRUD operations | ✅ |
+| Filtering & search queries | ✅ |
+| REST API standards | ✅ |
+| Required fields validation | ✅ |
+| HTTP status codes | ✅ |
+| All required endpoints | ✅ |
+| .env file (not in GitHub) | ✅ |
+| README with setup steps | ✅ |
+
+### Endpoints Implemented
+
+| No | Method | Endpoint | Status |
+|----|--------|----------|--------|
+| 1 | GET | `/api/bookings` | ✅ |
+| 2 | POST | `/api/bookings` | ✅ |
+| 3 | GET | `/api/bookings/:id` | ✅ |
+| 4 | PUT | `/api/bookings/:id` | ✅ |
+| 5 | DELETE | `/api/bookings/:id` | ✅ |
+| 6 | GET | `/api/bookings/search/email` | ✅ |
+| 7 | GET | `/api/bookings/filter/event` | ✅ |
+| 8 | GET | `/api/bookings/filter/ticketType` | ✅ Bonus |
 
 ---
 
-## 🛠️ Dependencies
+## 🛠️ Troubleshooting
 
-The project uses the following npm packages:
+### MongoDB Connection Issues
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| express | ^4.21.1 | Web framework for building REST API |
-| body-parser | ^1.20.3 | Middleware for parsing request bodies |
-| mongodb | ^6.20.0 | Database driver (for future MongoDB integration) |
-| ws | ^8.18.3 | WebSocket library (for real-time features) |
-| nodemon | ^3.1.0 | Development tool for auto-restarting on changes |
+**Error: `ECONNREFUSED`**
 
----
-
-## 📋 Requirements
-
-### Functional Requirements
-- ✅ Create, read, update, and delete events
-- ✅ Create, read, update, and delete bookings
-- ✅ Validate input data
-- ✅ Return appropriate HTTP status codes
-- ✅ Handle errors gracefully
-
-### Non-Functional Requirements
-- ✅ Fast response times
-- ✅ Clear API documentation
-- ✅ RESTful design principles
-- ✅ Easy to extend and maintain
-
----
-
-## 🚨 Troubleshooting
-
-### Port 3000 is Already in Use
-
-If you see an error like `EADDRINUSE: address already in use :::3000`:
-
+**Solution:**
 ```bash
-# Find the process using port 3000 and kill it
-# On Windows
+# Check if MongoDB is running
+ps aux | grep mongod  # Mac/Linux
+
+# Start MongoDB
+mongod  # Local MongoDB
+```
+
+### Port Already in Use
+
+**Error: `EADDRINUSE: address already in use :::3000`**
+
+**Solution:**
+```bash
+# Windows
 netstat -ano | findstr :3000
 taskkill /PID <PID> /F
 
-# On Mac/Linux
+# Mac/Linux
 lsof -i :3000
 kill -9 <PID>
 ```
-
-Then restart the server.
-
-### Modules Not Found
-
-If you get a "Cannot find module" error:
-
-```bash
-# Clear node_modules and reinstall
-rm -rf node_modules package-lock.json
-npm install
-```
-
-### Server Not Responding
-
-Ensure the server is running:
-
-```bash
-# Check if port 3000 is listening
-netstat -ano | findstr :3000  # Windows
-lsof -i :3000                # Mac/Linux
-```
-
----
-
-## 📞 Support & Contribution
-
-For issues or contributions, please:
-1. Check the project documentation
-2. Review existing issues in the repository
-3. Create a new issue with detailed information
 
 ---
 
 ## 📄 License
 
-ISC License - Feel free to use this project for academic and personal purposes.
+ISC License
 
 ---
 
-## 👨‍💼 Author
+## 👨‍💼 Version
 
-Developed for the Synergia Event Management Platform
-
----
-
-## 🎯 Future Enhancements
-
-- [ ] Integrate with MongoDB for persistent data storage
-- [ ] Add authentication & authorization
-- [ ] Implement WebSocket for real-time updates
-- [ ] Add email notifications
-- [ ] Create admin dashboard
-- [ ] Add payment integration
-- [ ] Implement user roles and permissions
-
----
-
-**Last Updated**: March 2026
+- **Assignment**: 2 - MongoDB Integration
+- **Version**: 2.0.0
+- **Updated**: March 2026
 
 **Status**: ✅ Production Ready
+
+---
+
+**Happy Booking! 🚀**
